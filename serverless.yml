@@ -1,0 +1,54 @@
+##################################################################################
+# CodeRecipe - a marketplace for developers to grab ready to use cloud solutions #
+# More details at: https://coderecipe.ai/architectures/57148351                  #
+##################################################################################
+
+service: CodeRecipeSample-Web3-Serverless
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+  stage: ${opt:stage}
+  ROPSTEN_INFURA_URL: ${opt:ROPSTEN_INFURA_URL}
+  ETH_PRIV_KEY: ${opt:ETH_PRIV_KEY}
+  ETH_FROM_ADDRESS: ${opt:ETH_FROM_ADDRESS}
+  apiKeys:
+    - ${opt:stage}-Web3-Serverless
+  usagePlan:
+    quota:
+      limit: 5000
+      offset: 0
+      period: DAY
+    throttle:
+      burstLimit: 1
+      rateLimit: 1
+
+functions:
+  EthHandler:
+    handler: handler.handler
+    runtime: nodejs8.10
+    name: ${self:provider.stage}-EthHandler
+    environment:
+      Stage: ${self:provider.stage}
+      ROPSTEN_INFURA_URL: ${self:provider.ROPSTEN_INFURA_URL}
+      ETH_PRIV_KEY: ${self:provider.ETH_PRIV_KEY}
+      ETH_FROM_ADDRESS: ${self:provider.ETH_FROM_ADDRESS}
+    events:
+      - http:
+          path: send-eth
+          method: POST
+          cors: true
+          integration: lambda
+          private: true        
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-plugin-scripts
+
+custom:
+  scripts:
+    hooks:
+      'package:cleanup': 'docker pull amazonlinux; docker run --rm -v $PWD:/data -w /data node:8.10 npm install scrypt web3 ethereumjs-tx'
+  pythonRequirements:
+    noDeploy: []
+    dockerizePip: false
