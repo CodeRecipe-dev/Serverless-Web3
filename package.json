@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "serverless-plugin-scripts": "^1.0.2",
+    "serverless-pseudo-parameters": "^2.4.0",
+  }
+}
